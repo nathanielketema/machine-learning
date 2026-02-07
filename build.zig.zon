@@ -1,0 +1,18 @@
+.{
+    .name = .machine_learning,
+    .version = "0.0.0",
+    .fingerprint = 0x46268def549ce83,
+    .minimum_zig_version = "0.16.0-dev.2368+380ea6fb5",
+    .dependencies = .{
+        .neural_network = .{
+            .url = "git+https://github.com/nathanielketema/neural-network.git#3dc059630d8611bc8514b4741183138e6a2645e3",
+            .hash = "neural_network-0.0.0-xLGPxTo5AABuiTg6NKOweS0bNVon0u7eMsnobTncPdMg",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+        "README.md",
+    },
+}
