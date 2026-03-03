@@ -72,12 +72,12 @@ const train_data = &xor_gate;
 pub fn main() !void {
     const eps: f32 = 1e-1;
     const learning_rate: f32 = 1e-1;
-    const train_count = 100_000;
+    const epochs = 100_000;
     const now = try std.time.Instant.now();
 
     var xor: XorModel = .init(@intCast(now.timestamp.nsec));
     std.debug.print("Before: cost = {d}\n", .{cost(xor)});
-    for (0..train_count) |_| {
+    for (0..epochs) |_| {
         const gradient: XorModel = compute_gradient(&xor, eps);
         xor = apply_gradient(xor, gradient, learning_rate);
     }

@@ -9,23 +9,23 @@ const testing = std.testing;
 // # Neural Networks
 //
 // The simple formula (it's similar to the line formula):
-// - f(x)/y = x * weight + bias;
+// - f(input)/prediction = input * weight + bias;
 //
 // In general:
-// - f(x)/y = x1*w1 + x2*w2 + .... + b
+// - f(input)/prediction = x1*w1 + x2*w2 + .... + b
 //
 // The model is trying to learn the weight needed to get the desired output
 //
 // Steps:
 // 1. pick a random weight
-// 2. find y = sum(x * weight) + bias (forwarding)
+// 2. find prediction = sum(input * weight) + bias (forwarding)
 //    - depending on your output, apply:
-//    - y = activation_function(y) -> turns the result into a probability (0-1)
+//    - prediction = activation_function(prediction) -> turns the result into a probability (0-1)
 // 4. calculate the cost function (diff between actual and expected)
 // 5. back propagation  (finite_difference)
 // 6. adjustment
 
-const training_data = [_][2]f32{ // {input(x), output(y)}
+const training_data = [_][2]f32{ // {input(input), output(prediction)}
     .{ 0, 0 },
     .{ 1, 2 },
     .{ 2, 4 },
@@ -50,7 +50,8 @@ pub fn main(_: std.process.Init) !void {
     // we use rate(also called the learning rate) to speed up the weight change
     const h: f32 = 1e-3;
     const rate: f32 = 1e-3;
-    for (0..500) |_| {
+    const epoch: usize = 500;
+    for (0..epoch) |_| {
         // To not calculate it twice
         const c = cost(weight, bias);
         const gradient_weight = (cost(weight + h, bias) - c) / h;
@@ -68,7 +69,7 @@ pub fn main(_: std.process.Init) !void {
         cost(weight, bias),
     });
 
-    std.debug.print("\nx | y = Model\n", .{});
+    std.debug.print("\nx | prediction = Model\n", .{});
     std.debug.print("-------------\n", .{});
     for (0..training_data.len) |i| {
         std.debug.print(
@@ -91,10 +92,10 @@ fn cost(weight: f32, bias: f32) f32 {
     var mean_squared_error: f32 = 0;
     for (training_data) |data| {
         const actual = data[1];
-        const x = data[0];
+        const input = data[0];
 
-        const y = x * weight + bias;
-        const err = y - actual;
+        const prediction = input * weight + bias;
+        const err = prediction - actual;
 
         mean_squared_error += err * err;
     }
