@@ -2,17 +2,17 @@ const std = @import("std");
 const assert = std.debug.assert;
 const testing = std.testing;
 
-const or_gate = [_][3]f32{
-    .{ 0, 0, 0 },
-    .{ 0, 1, 1 },
-    .{ 1, 0, 1 },
-    .{ 1, 1, 1 },
-};
-
 const and_gate = [_][3]f32{
     .{ 0, 0, 0 },
     .{ 0, 1, 0 },
     .{ 1, 0, 0 },
+    .{ 1, 1, 1 },
+};
+
+const or_gate = [_][3]f32{
+    .{ 0, 0, 0 },
+    .{ 0, 1, 1 },
+    .{ 1, 0, 1 },
     .{ 1, 1, 1 },
 };
 
@@ -23,67 +23,69 @@ const nand_gate = [_][3]f32{
     .{ 1, 1, 0 },
 };
 
-const train_data = &and_gate;
+const training_data = &or_gate;
+const symbol: u8 = '^';
 
-pub fn main() !void {
-    var prng: std.Random.DefaultPrng = .init(testing.random_seed);
-    const random = prng.random();
+pub fn main(_: std.process.Init) !void {
+    var prng: std.Random.DefaultPrng = .init(67);
+    const random: std.Random = prng.random();
+
+    const h: f32 = 1e-3;
+    const alpha: f32 = 1;
+    const epoch: usize = 50000;
 
     var w1: f32 = random.float(f32);
     var w2: f32 = random.float(f32);
     var b: f32 = random.float(f32);
 
-    const h: f32 = 1e-3;
-    const rate: f32 = 1e-1;
-    for (0..10000) |_| {
-        const c = cost(w1, w2, b);
+    for (0..epoch) |_| {
+        // Finite difference:
+        // - f(x) = (f(x + h) - f(x)) / h
+        const c: f32 = cost(w1, w2, b);
 
-        const gradient_w1 = (cost(w1 + h, w2, b) - c) / h;
-        const gradient_w2 = (cost(w1, w2 + h, b) - c) / h;
-        const gradient_b = (cost(w1, w2, b + h) - c) / h;
+        const w1_grad: f32 = (cost(w1 + h, w2, b) - c) / h;
+        const w2_grad: f32 = (cost(w1, w2 + h, b) - c) / h;
+        const b_grad: f32 = (cost(w1, w2, b + h) - c) / h;
 
-        w1 -= rate * gradient_w1;
-        w2 -= rate * gradient_w2;
-        b -= rate * gradient_b;
+        w1 -= w1_grad * alpha;
+        w2 -= w2_grad * alpha;
+        b -= b_grad * alpha;
     }
 
-    for (train_data) |x| {
+    std.debug.print("Results\n", .{});
+    for (training_data) |data| {
+        const pred: f32 = forward(data[0], data[1], w1, w2, b);
+        const c: f32 = cost(w1, w2, b);
         std.debug.print(
-            "{d} | {d} = {d} => {d}\n",
+            "{d} {c} {d} = {d}, {d}......cost = {d}\n",
             .{
-                x[0],
-                x[1],
-                x[2],
-                sigmoid(x[0] * w1 + x[1] * w2 + b),
+                data[0],
+                symbol,
+                data[1],
+                data[2],
+                pred,
+                c,
             },
         );
     }
 }
 
+fn forward(input_1: f32, input_2: f32, w1: f32, w2: f32, b: f32) f32 {
+    return sigmoid(input_1 * w1 + input_2 * w2 + b);
+}
+
 fn cost(w1: f32, w2: f32, b: f32) f32 {
-    var mean_squared_error: f32 = 0;
-    for (train_data) |data| {
-        const actual = data[2];
-        const x1 = data[0];
-        const x2 = data[1];
+    var mse: f32 = 0;
+    for (training_data) |data| {
+        const pred: f32 = forward(data[0], data[1], w1, w2, b);
+        const real: f32 = data[2];
 
-        const y = sigmoid(x1 * w1 + x2 * w2 + b);
-        const err = y - actual;
-
-        mean_squared_error += err * err;
+        const diff: f32 = pred - real;
+        mse += diff * diff;
     }
-    mean_squared_error /= train_data.len;
-    return mean_squared_error;
+    return mse / training_data.len;
 }
 
 fn sigmoid(x: f32) f32 {
-    return 1.0 / (1.0 + std.math.exp(-x));
-}
-
-test "sigmoid" {
-    var x: f32 = -10;
-    while (x < 10) : (x += 1) {
-        try testing.expect(sigmoid(x) > 0);
-        try testing.expect(sigmoid(x) < 1);
-    }
+    return 1.0 / (1.0 + @exp(-x));
 }

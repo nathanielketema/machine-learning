@@ -5,8 +5,8 @@
     .minimum_zig_version = "0.16.0-dev.2368+380ea6fb5",
     .dependencies = .{
         .neural_network = .{
-            .url = "git+https://github.com/nathanielketema/neural-network.git#3dc059630d8611bc8514b4741183138e6a2645e3",
-            .hash = "neural_network-0.0.0-xLGPxTo5AABuiTg6NKOweS0bNVon0u7eMsnobTncPdMg",
+            .url = "git+https://github.com/nathanielketema/neural-network.git#8f7bd832f538b83d58eaac95c31f38dbfa2df509",
+            .hash = "neural_network-0.0.0-xLGPxfAyAAAaSLZEtex5_0II2Ztfu2OC5qNYfAvEXpal",
         },
     },
     .paths = .{
