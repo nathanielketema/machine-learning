@@ -9,23 +9,23 @@ const testing = std.testing;
 // # Neural Networks
 //
 // The simple formula (it's similar to the line formula):
-// - f(input)/prediction = input * weight + bias;
+// - f(input)/pred = input * wght + bias;
 //
 // In general:
-// - f(input)/prediction = x1*w1 + x2*w2 + .... + b
+// - f(input)/pred = x1*w1 + x2*w2 + .... + b
 //
-// The model is trying to learn the weight needed to get the desired output
+// The model is trying to learn the wght needed to get the desired output
 //
 // Steps:
-// 1. pick a random weight
-// 2. find prediction = sum(input * weight) + bias (forwarding)
+// 1. pick a random wght
+// 2. find pred = sum(input * wght) + bias (forwarding)
 //    - depending on your output, apply:
-//    - prediction = activation_function(prediction) -> turns the result into a probability (0-1)
-// 4. calculate the cost function (diff between actual and expected)
+//    - pred = activation_function(pred) -> turns the result into a probability (0-1)
+// 4. calculate the cost function (diff between goal and expected)
 // 5. back propagation  (finite_difference)
 // 6. adjustment
 
-const training_data = [_][2]f32{ // {input(input), output(prediction)}
+const training_data = [_][2]f32{ // {input(input), output(pred)}
     .{ 0, 0 },
     .{ 1, 2 },
     .{ 2, 4 },
@@ -37,69 +37,67 @@ pub fn main(_: std.process.Init) !void {
     var prng: std.Random.DefaultPrng = .init(testing.random_seed);
     const random = prng.random();
 
-    var weight: f32 = random.float(f32) * 10;
+    var wght: f32 = random.float(f32) * 10;
     var bias: f32 = random.float(f32);
 
-    std.debug.print("Inital: weight = {d}, bias = {d}, cost(weight, bias) = {d}\n", .{
-        weight,
+    std.debug.print("Inital: wght = {d}, bias = {d}, cost(wght, bias) = {d}\n", .{
+        wght,
         bias,
-        cost(weight, bias),
+        cost(wght, bias),
     });
 
-    // gradient_weight = finite_difference/derivative
-    // we use rate(also called the learning rate) to speed up the weight change
+    // wght_grad = finite_difference/derivative
+    // we use alpha(also called the learning alpha) to speed up the wght change
     const h: f32 = 1e-3;
-    const rate: f32 = 1e-3;
+    const alpha: f32 = 1e-3;
     const epoch: usize = 500;
     for (0..epoch) |_| {
         // To not calculate it twice
-        const c = cost(weight, bias);
-        const gradient_weight = (cost(weight + h, bias) - c) / h;
-        const gradient_bias = (cost(weight, bias + h) - c) / h;
+        const loss = cost(wght, bias);
+        const wght_grad = (cost(wght + h, bias) - loss) / h;
+        const bias_grad = (cost(wght, bias + h) - loss) / h;
 
         // Update
-        weight -= rate * gradient_weight;
-        bias -= rate * gradient_bias;
+        wght -= alpha * wght_grad;
+        bias -= alpha * bias_grad;
     }
 
     std.debug.print("---\n", .{});
-    std.debug.print("Final: weight = {d}, bias = {d}, cost(weight, bias) = {d}\n", .{
-        weight,
+    std.debug.print("Final: wght = {d}, bias = {d}, cost(wght, bias) = {d}\n", .{
+        wght,
         bias,
-        cost(weight, bias),
+        cost(wght, bias),
     });
 
-    std.debug.print("\nx | prediction = Model\n", .{});
+    std.debug.print("\nx | pred = Model\n", .{});
     std.debug.print("-------------\n", .{});
-    for (0..training_data.len) |i| {
+    for (training_data) |data| {
+        const pred = data[0] * wght + bias;
         std.debug.print(
             "{d} | {d} = {d}\n",
             .{
-                training_data[i][0],
-                training_data[i][1],
-                training_data[i][0] * weight + bias,
+                data[0],
+                data[1],
+                pred,
             },
         );
     }
 }
 
 // The goal is for:
-// - cost(weight) => 0
+// - cost(wght) => 0
 //
 // By squaring the error we ensure our cost function is curvy (parabolla) which helps with
 // calculating the finite_difference later
-fn cost(weight: f32, bias: f32) f32 {
+fn cost(wght: f32, bias: f32) f32 {
     var mean_squared_error: f32 = 0;
     for (training_data) |data| {
-        const actual = data[1];
-        const input = data[0];
+        const pred = data[0] * wght + bias;
+        const goal = data[1];
 
-        const prediction = input * weight + bias;
-        const err = prediction - actual;
+        const diff = pred - goal;
 
-        mean_squared_error += err * err;
+        mean_squared_error += diff * diff;
     }
-    mean_squared_error /= training_data.len;
-
-    return mean_squared_error;
+    return mean_squared_error / training_data.len;
 }

@@ -70,16 +70,16 @@ const xor_gate = [_][3]f32{
 const train_data = &xor_gate;
 
 pub fn main() !void {
-    const eps: f32 = 1e-1;
-    const learning_rate: f32 = 1e-1;
-    const epochs = 100_000;
+    const h: f32 = 1e-1;
+    const alpha: f32 = 1e-1;
+    const epoch = 100_000;
     const now = try std.time.Instant.now();
 
     var xor: XorModel = .init(@intCast(now.timestamp.nsec));
     std.debug.print("Before: cost = {d}\n", .{cost(xor)});
-    for (0..epochs) |_| {
-        const gradient: XorModel = compute_gradient(&xor, eps);
-        xor = apply_gradient(xor, gradient, learning_rate);
+    for (0..epoch) |_| {
+        const gradient: XorModel = compute_gradient(&xor, h);
+        xor = apply_gradient(xor, gradient, alpha);
     }
     std.debug.print("After: cost = {d}\n", .{cost(xor)});
 
@@ -108,71 +108,71 @@ pub fn main() !void {
     }
 }
 
-fn compute_gradient(xorp: *XorModel, eps: f32) XorModel {
+fn compute_gradient(xorp: *XorModel, h: f32) XorModel {
     var gradient: XorModel = undefined;
     var saved: f32 = undefined;
     var xor = xorp.*;
     const c = cost(xor);
 
     saved = xor.or_w1;
-    xor.or_w1 += eps;
-    gradient.or_w1 = (cost(xor) - c) / eps;
+    xor.or_w1 += h;
+    gradient.or_w1 = (cost(xor) - c) / h;
     xor.or_w1 = saved;
 
     saved = xor.or_w2;
-    xor.or_w2 += eps;
-    gradient.or_w2 = (cost(xor) - c) / eps;
+    xor.or_w2 += h;
+    gradient.or_w2 = (cost(xor) - c) / h;
     xor.or_w2 = saved;
 
     saved = xor.or_b;
-    xor.or_b += eps;
-    gradient.or_b = (cost(xor) - c) / eps;
+    xor.or_b += h;
+    gradient.or_b = (cost(xor) - c) / h;
     xor.or_b = saved;
 
     saved = xor.nand_w1;
-    xor.nand_w1 += eps;
-    gradient.nand_w1 = (cost(xor) - c) / eps;
+    xor.nand_w1 += h;
+    gradient.nand_w1 = (cost(xor) - c) / h;
     xor.nand_w1 = saved;
 
     saved = xor.nand_w2;
-    xor.nand_w2 += eps;
-    gradient.nand_w2 = (cost(xor) - c) / eps;
+    xor.nand_w2 += h;
+    gradient.nand_w2 = (cost(xor) - c) / h;
     xor.nand_w2 = saved;
 
     saved = xor.nand_b;
-    xor.nand_b += eps;
-    gradient.nand_b = (cost(xor) - c) / eps;
+    xor.nand_b += h;
+    gradient.nand_b = (cost(xor) - c) / h;
     xor.nand_b = saved;
 
     saved = xor.and_w1;
-    xor.and_w1 += eps;
-    gradient.and_w1 = (cost(xor) - c) / eps;
+    xor.and_w1 += h;
+    gradient.and_w1 = (cost(xor) - c) / h;
     xor.and_w1 = saved;
 
     saved = xor.and_w2;
-    xor.and_w2 += eps;
-    gradient.and_w2 = (cost(xor) - c) / eps;
+    xor.and_w2 += h;
+    gradient.and_w2 = (cost(xor) - c) / h;
     xor.and_w2 = saved;
 
     saved = xor.and_b;
-    xor.and_b += eps;
-    gradient.and_b = (cost(xor) - c) / eps;
+    xor.and_b += h;
+    gradient.and_b = (cost(xor) - c) / h;
     xor.and_b = saved;
 
     return gradient;
 }
 
-fn apply_gradient(xor: XorModel, gradient: XorModel, learning_rate: f32) XorModel {
+fn apply_gradient(xor: XorModel, gradient: XorModel, alpha: f32) XorModel {
     var result = xor;
-    result.or_w1 -= learning_rate * gradient.or_w1;
-    result.or_w2 -= learning_rate * gradient.or_w2;
-    result.or_b -= learning_rate * gradient.or_b;
-    result.nand_w1 -= learning_rate * gradient.nand_w1;
-    result.nand_w2 -= learning_rate * gradient.nand_w2;
-    result.nand_b -= learning_rate * gradient.nand_b;
-    result.and_w1 -= learning_rate * gradient.and_w1;
-    result.and_w2 -= learning_rate * gradient.and_w2;
-    result.and_b -= learning_rate * gradient.and_b;
+    result.or_w1 -= alpha * gradient.or_w1;
+    result.or_w2 -= alpha * gradient.or_w2;
+    result.or_b -= alpha * gradient.or_b;
+    result.nand_w1 -= alpha * gradient.nand_w1;
+    result.nand_w2 -= alpha * gradient.nand_w2;
+    result.nand_b -= alpha * gradient.nand_b;
+    result.and_w1 -= alpha * gradient.and_w1;
+    result.and_w2 -= alpha * gradient.and_w2;
+    result.and_b -= alpha * gradient.and_b;
     return result;
 }
 
