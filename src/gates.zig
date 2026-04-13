@@ -24,7 +24,7 @@ const nand_gate = [_][3]f32{
 };
 
 const training_data = &or_gate;
-const symbol: u8 = '^';
+const symb: u8 = '^';
 
 pub fn main(_: std.process.Init) !void {
     var prng: std.Random.DefaultPrng = .init(67);
@@ -34,56 +34,57 @@ pub fn main(_: std.process.Init) !void {
     const alpha: f32 = 1;
     const epoch: usize = 50000;
 
-    var w1: f32 = random.float(f32);
-    var w2: f32 = random.float(f32);
-    var b: f32 = random.float(f32);
+    var wght1: f32 = random.float(f32);
+    var wght2: f32 = random.float(f32);
+    var bias: f32 = random.float(f32);
 
     for (0..epoch) |_| {
         // Finite difference:
         // - f(x) = (f(x + h) - f(x)) / h
-        const c: f32 = cost(w1, w2, b);
+        const loss: f32 = cost(wght1, wght2, bias);
 
-        const w1_grad: f32 = (cost(w1 + h, w2, b) - c) / h;
-        const w2_grad: f32 = (cost(w1, w2 + h, b) - c) / h;
-        const b_grad: f32 = (cost(w1, w2, b + h) - c) / h;
+        const wght1_grad: f32 = (cost(wght1 + h, wght2, bias) - loss) / h;
+        const wght2_grad: f32 = (cost(wght1, wght2 + h, bias) - loss) / h;
+        const bias_grad: f32 = (cost(wght1, wght2, bias + h) - loss) / h;
 
-        w1 -= w1_grad * alpha;
-        w2 -= w2_grad * alpha;
-        b -= b_grad * alpha;
+        wght1 -= wght1_grad * alpha;
+        wght2 -= wght2_grad * alpha;
+        bias -= bias_grad * alpha;
     }
 
     std.debug.print("Results\n", .{});
     for (training_data) |data| {
-        const pred: f32 = forward(data[0], data[1], w1, w2, b);
-        const c: f32 = cost(w1, w2, b);
+        const pred: f32 = frwd(data[0], data[1], wght1, wght2, bias);
+        const loss: f32 = cost(wght1, wght2, bias);
         std.debug.print(
             "{d} {c} {d} = {d}, {d}......cost = {d}\n",
             .{
                 data[0],
-                symbol,
+                symb,
                 data[1],
                 data[2],
                 pred,
-                c,
+                loss,
             },
         );
     }
 }
 
-fn forward(input_1: f32, input_2: f32, w1: f32, w2: f32, b: f32) f32 {
-    return sigmoid(input_1 * w1 + input_2 * w2 + b);
+fn frwd(inpt1: f32, inpt2: f32, wght1: f32, wght2: f32, bias: f32) f32 {
+    return sigmoid(inpt1 * wght1 + inpt2 * wght2 + bias);
 }
 
-fn cost(w1: f32, w2: f32, b: f32) f32 {
-    var mse: f32 = 0;
+fn cost(wght1: f32, wght2: f32, bias: f32) f32 {
+    var loss: f32 = 0;
     for (training_data) |data| {
-        const pred: f32 = forward(data[0], data[1], w1, w2, b);
-        const real: f32 = data[2];
+        const pred: f32 = frwd(data[0], data[1], wght1, wght2, bias);
+        const goal: f32 = data[2];
 
-        const diff: f32 = pred - real;
-        mse += diff * diff;
+        const diff: f32 = pred - goal;
+
+        loss += diff * diff;
     }
-    return mse / training_data.len;
+    return loss / training_data.len;
 }
 
 fn sigmoid(x: f32) f32 {
