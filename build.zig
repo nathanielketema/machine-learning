@@ -4,7 +4,7 @@ pub fn build(b: *std.Build) void {
     const target = b.standardTargetOptions(.{});
     const optimize = b.standardOptimizeOption(.{});
 
-    var matrix_mod = b.dependency("neural_network", .{
+    var nn_mod = b.dependency("neural_network", .{
         .target = target,
         .optimize = optimize,
     });
@@ -12,11 +12,11 @@ pub fn build(b: *std.Build) void {
     const exe = b.addExecutable(.{
         .name = "machine_learning",
         .root_module = b.createModule(.{
-            .root_source_file = b.path("src/xor_using_matrix.zig"),
+            .root_source_file = b.path("src/xor_v2.zig"),
             .target = target,
             .optimize = optimize,
             .imports = &.{
-                .{ .name = "matrix", .module = matrix_mod.module("matrix") },
+                .{ .name = "neural_network", .module = nn_mod.module("neural_network") },
             },
         }),
     });
